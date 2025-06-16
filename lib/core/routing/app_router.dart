@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../features/authentication/view/login_view.dart';
 import '../../features/authentication/view/register_view.dart';
 
+
 class AppRouter {
   static const String loginRoute = '/';
   static const String registerRoute = '/register';
