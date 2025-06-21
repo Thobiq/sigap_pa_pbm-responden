@@ -1,5 +1,3 @@
-// Lokasi file: lib/features/profile/view/profile_view.dart
-
 import 'package:flutter/material.dart';
 
 class ProfileView extends StatelessWidget {

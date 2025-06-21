@@ -1,5 +1,3 @@
-// Lokasi file: lib/features/sos/view/emergency_history_view.dart
-
 import 'package:flutter/material.dart';
 
 class EmergencyHistoryView extends StatefulWidget {

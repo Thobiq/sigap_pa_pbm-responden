@@ -1,5 +1,3 @@
-// Lokasi file: lib/features/sos/view/report_emergency_view.dart
-
 import 'package:flutter/material.dart';
 
 class ReportEmergencyView extends StatefulWidget {
