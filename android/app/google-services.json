@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "732394715071",
+    "project_id": "sigap-pa-pbm",
+    "storage_bucket": "sigap-pa-pbm.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:732394715071:android:e982286a2ee6190dd1930a",
+        "android_client_info": {
+          "package_name": "com.example.sigap_pa_pbm"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "732394715071-fqochtjnjvadcg3r5delhsf5udrqoacj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAOVa3BuzrjzIBRP7i3U0COSKwKue-MKnU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "732394715071-fqochtjnjvadcg3r5delhsf5udrqoacj.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "732394715071-ve82k8kcevo4cj7kgfsj1io78n98hm5q.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.sigapPaPbm"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
