@@ -1,14 +1,14 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  static final FirebaseAuth _auth = FirebaseAuth.instance;
+  static final fb_auth.FirebaseAuth _auth = fb_auth.FirebaseAuth.instance;
   static final GoogleSignIn _googleSignIn = GoogleSignIn();
 
-  static const String _backendAuthApiUrl = 'http://192.168.1.2:3210/api/auth/pelapor-auth';
+  static const String _backendAuthApiUrl = 'http://192.168.190.118:3210/api/auth/pelapor-auth';
 
   static Future<String?> signInWithGoogle() async {
     try{
@@ -16,12 +16,12 @@ class AuthService {
       if (googleUser == null) return null;
 
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final AuthCredential credential = GoogleAuthProvider.credential(
+      final fb_auth.AuthCredential credential = fb_auth.GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken
       );
 
-      final UserCredential userCredential = await _auth.signInWithCredential(credential);
+      final fb_auth.UserCredential userCredential = await _auth.signInWithCredential(credential);
       return await userCredential.user?.getIdToken();
     } catch (e){
       print('error during google sign in : $e');
@@ -31,13 +31,13 @@ class AuthService {
 
   static Future<String?> signUpWithEmailAndPassword(String email, String password) async {
     try{
-      final UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      final fb_auth.UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: email, 
         password: password
       );
 
       return await userCredential.user?.getIdToken();
-    } on FirebaseAuthException catch (e){
+    } on fb_auth.FirebaseAuthException catch (e){
       print('firebaseAuthException during sign up : ${e.code} - ${e.message}');
       rethrow;
     } catch (e){
@@ -48,13 +48,13 @@ class AuthService {
 
   static Future<String?> signInWithEmailAndPassword(String email, String password) async {
     try{
-      final UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+      final fb_auth.UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: email, 
         password: password
       );
 
       return await userCredential.user?.getIdToken();
-    } on FirebaseAuthException catch (e) {
+    } on fb_auth.FirebaseAuthException catch (e) {
       print('firebaseAuthException during sign in : $e');
       rethrow;
     } catch (e) {

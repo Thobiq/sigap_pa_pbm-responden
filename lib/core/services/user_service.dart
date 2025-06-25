@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserService {
-  static const String _backendApiBaseUrl = 'http://192.168.1.2:3210/api';
+  static const String _backendApiBaseUrl = 'http://192.168.190.118:3210/api';
 
   static Future<Map<String, dynamic>?> updatePelaporProfile({
     required String phoneNumber,

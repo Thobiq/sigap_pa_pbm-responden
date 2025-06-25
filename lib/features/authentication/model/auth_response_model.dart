@@ -1,4 +1,4 @@
-import 'package:sigap_pa_pbm/core/models/user_models.dart';
+import 'package:sigap_pa_pbm/core/models/user_model.dart';
 
 class AuthResponse {
   final bool success;

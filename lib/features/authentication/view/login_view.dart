@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart'; // Tetap pertahankan jika dipakai
-import 'package:provider/provider.dart'; // Import Provider
-import 'package:sigap_pa_pbm/core/routing/app_router.dart'; // Untuk navigasi
-import 'package:sigap_pa_pbm/features/authentication/viewmodel/auth_viewmodel.dart'; // Import AuthViewModel
+import 'package:flutter/gestures.dart';
+import 'package:provider/provider.dart';
+import 'package:sigap_pa_pbm/core/routing/app_router.dart';
+import 'package:sigap_pa_pbm/features/authentication/model/auth_response_model.dart';
+import 'package:sigap_pa_pbm/features/authentication/viewmodel/auth_viewmodel.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
-class LoginView extends StatefulWidget { // Ubah menjadi StatefulWidget
+class LoginView extends StatefulWidget {
   const LoginView({super.key});
 
   @override
@@ -12,26 +15,21 @@ class LoginView extends StatefulWidget { // Ubah menjadi StatefulWidget
 }
 
 class _LoginViewState extends State<LoginView> {
-  // Tambahkan TextEditingController untuk input email dan password
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    // Cek status login saat layar dimulai (opsional, bisa juga di main.dart atau splash screen)
     _checkLoginStatus();
   }
 
-  // Fungsi untuk mengecek apakah user sudah memiliki JWT kustom dari backend
   Future<void> _checkLoginStatus() async {
-    // AuthViewModel.checkLoginStatus() adalah static method di ViewModel
     if (await AuthViewModel.checkLoginStatus()) {
       Navigator.of(context).pushReplacementNamed(AppRouter.homeRoute);
     }
   }
 
-  // Helper untuk menampilkan SnackBar pesan error
   void _showErrorSnackBar(BuildContext context, String message) {
     if (message.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -40,16 +38,53 @@ class _LoginViewState extends State<LoginView> {
     }
   }
 
+  void _handleAuthResponseNavigation(AuthViewModel authViewModel, AuthResponse? response) {
+    if (response != null && response.success) {
+      debugPrint('Auth successful. Raw backend user data: ${response.user?.toJson()}');
+
+      if (response.user != null) {
+        SharedPreferences.getInstance().then((prefs) async {
+          try {
+            final userJson = response.user!.toJson();
+            final userJsonString = json.encode(userJson);
+
+            await prefs.setString('current_user_data', userJsonString);
+            debugPrint('User data SAVED to SharedPreferences: $userJsonString');
+            
+            if (response.user!.phoneNumber?.isEmpty ?? true) {
+              Navigator.of(context).pushReplacementNamed(AppRouter.profileRoute);
+            } else {
+              Navigator.of(context).pushReplacementNamed(AppRouter.homeRoute);
+            }
+
+          } catch (e) {
+            debugPrint('ERROR: Failed to save user data to SharedPreferences: $e');
+            _showErrorSnackBar(context, 'Gagal menyimpan data pengguna lokal. Coba lagi.');
+            Navigator.of(context).pushReplacementNamed(AppRouter.homeRoute);
+          }
+        }).catchError((e) {
+          debugPrint('ERROR: Failed to get SharedPreferences instance: $e');
+          _showErrorSnackBar(context, 'Akses penyimpanan lokal gagal.');
+          Navigator.of(context).pushReplacementNamed(AppRouter.homeRoute);
+        });
+
+      } else {
+        _showErrorSnackBar(context, 'Data pengguna tidak lengkap dari backend (objek user null).');
+        Navigator.of(context).pushReplacementNamed(AppRouter.homeRoute);
+      }
+    } else {
+      _showErrorSnackBar(context, response?.message ?? authViewModel.errorMessage ?? 'Gagal login. Coba lagi.');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Menggunakan Consumer untuk mendengarkan perubahan pada AuthViewModel
     return Consumer<AuthViewModel>(
       builder: (context, authViewModel, child) {
-        // Tampilkan SnackBar jika ada error baru dari ViewModel
         if (authViewModel.errorMessage != null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             _showErrorSnackBar(context, authViewModel.errorMessage!);
-            authViewModel.clearError(); // Bersihkan error setelah ditampilkan
+            authViewModel.clearError();
           });
         }
 
@@ -57,7 +92,7 @@ class _LoginViewState extends State<LoginView> {
           body: Padding(
             padding: const EdgeInsets.all(24),
             child: Center(
-              child: SingleChildScrollView( // Tambahkan SingleChildScrollView agar keyboard tidak overflow
+              child: SingleChildScrollView(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -72,46 +107,38 @@ class _LoginViewState extends State<LoginView> {
                     ),
                     const SizedBox(height: 20),
                     TextField(
-                      controller: _emailController, // Hubungkan dengan Controller
+                      controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'email',
                         hintText: 'masukkan email',
-                        prefixIcon: const Icon(Icons.email_outlined),
-                        // Style border sudah diatur di ThemeData di main.dart
+                        prefixIcon: Icon(Icons.email_outlined),
                       ),
                     ),
                     const SizedBox(height: 24),
                     TextField(
-                      controller: _passwordController, // Hubungkan dengan Controller
+                      controller: _passwordController,
                       obscureText: true,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'password',
                         hintText: 'masukkan password',
-                        prefixIcon: const Icon(Icons.key),
-                        // Style border sudah diatur di ThemeData di main.dart
+                        prefixIcon: Icon(Icons.key),
                       ),
                     ),
                     const SizedBox(height: 24),
-                    // Tombol Login
-                    authViewModel.isLoading // Tampilkan loading indicator
+                    // Tombol Login (Email/Password)
+                    authViewModel.isLoading
                         ? const CircularProgressIndicator()
                         : ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              // Style sudah diatur di ThemeData di main.dart
                               minimumSize: const Size.fromHeight(55),
                             ),
                             onPressed: () async {
-                              // Panggil metode login dari ViewModel
                               final response = await authViewModel.signInWithEmailAndPassword(
                                 _emailController.text,
                                 _passwordController.text,
                               );
-                              if (response != null && response.success) {
-                                // Jika login berhasil, arahkan ke Home Screen
-                                Navigator.of(context).pushReplacementNamed(AppRouter.homeRoute);
-                              }
-                              // Error akan ditangani oleh SnackBar via ViewModel
+                              _handleAuthResponseNavigation(authViewModel, response);
                             },
                             child: const Text(
                               'Login',
@@ -119,26 +146,18 @@ class _LoginViewState extends State<LoginView> {
                             ),
                           ),
                     const SizedBox(height: 20),
-                    // Tautan ke Register
                     _buildRegisterLink(context),
-                    const SizedBox(height: 20), // Tambahkan sedikit spasi di bawah
-                    // Tombol Google Sign-In (Tambahan Opsional jika ingin di LoginView)
+                    const SizedBox(height: 20),
+                    // Tombol Google Sign-In
                     authViewModel.isLoading
-                        ? const SizedBox.shrink() // Sembunyikan jika ada loading utama
+                        ? const SizedBox.shrink()
                         : ElevatedButton.icon(
                             onPressed: () async {
                               final response = await authViewModel.signInWithGoogle();
-                              if (response != null && response.success) {
-                                // Cek apakah profil perlu dilengkapi (nomor HP null/kosong)
-                                if (response.user?.phoneNumber?.isEmpty ?? true) {
-                                  Navigator.of(context).pushReplacementNamed(AppRouter.profileRoute);
-                                } else {
-                                  Navigator.of(context).pushReplacementNamed(AppRouter.homeRoute);
-                                }
-                              }
+                              _handleAuthResponseNavigation(authViewModel, response);
                             },
                             icon: Image.asset(
-                              'assets/google_logo.png', // Pastikan Anda punya gambar ini
+                              'assets/google_logo.png',
                               height: 24,
                             ),
                             label: const Text(
@@ -161,7 +180,6 @@ class _LoginViewState extends State<LoginView> {
     );
   }
 
-  // Widget untuk tautan Register
   Widget _buildRegisterLink(BuildContext context) {
     return RichText(
       text: TextSpan(
@@ -177,7 +195,7 @@ class _LoginViewState extends State<LoginView> {
             ),
             recognizer: TapGestureRecognizer()
               ..onTap = () {
-                Navigator.pushNamed(context, AppRouter.registerRoute); // Navigasi ke RegisterView
+                Navigator.pushNamed(context, AppRouter.registerRoute);
               },
           ),
         ],
